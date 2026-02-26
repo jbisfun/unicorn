@@ -862,6 +862,11 @@ static inline void *alloc_code_gen_buffer(struct uc_struct *uc)
 
     return buf;
 }
+
+void free_code_gen_buffer(struct uc_struct *uc)
+{
+    (void)uc;
+}
 #elif defined(_WIN32)
 #define COMMIT_COUNT (1024) // Commit 4MB per exception
 #define CLOSURE_SIZE (4096)

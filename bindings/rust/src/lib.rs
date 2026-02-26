@@ -735,19 +735,34 @@ impl<'a, D> Unicorn<'a, D> {
         if !(HookType::MEM_ALL | HookType::MEM_READ_AFTER).contains(hook_type) {
             return Err(uc_error::ARG);
         }
+        let valid_hooks = HookType::MEM_VALID | HookType::MEM_READ_AFTER;
+        let invalid_hooks = HookType::MEM_INVALID;
+        let has_valid = !(hook_type & valid_hooks).is_empty();
+        let has_invalid = !(hook_type & invalid_hooks).is_empty();
+
+        // C API uses different callback ABIs for valid vs invalid mem hooks.
+        // Mixing both in one registration can cause signature mismatch on wasm.
+        if has_valid && has_invalid {
+            return Err(uc_error::ARG);
+        }
 
         let mut hook_id = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Rc::downgrade(&self.inner),
         });
+        let hook_proxy = if has_valid {
+            ffi::mem_hook_proxy_valid::<D, F> as _
+        } else {
+            ffi::mem_hook_proxy::<D, F> as _
+        };
 
         unsafe {
             ffi::uc_hook_add(
                 self.get_handle(),
                 &mut hook_id,
                 hook_type,
-                ffi::mem_hook_proxy::<D, F> as _,
+                hook_proxy,
                 user_data.as_mut() as *mut _ as _,
                 begin,
                 end,

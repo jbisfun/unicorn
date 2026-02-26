@@ -182,8 +182,10 @@ static void *qemu_ram_mmap(struct uc_struct *uc,
                     bool shared)
 {
 #ifdef __wasm__
-    size_t total = size + align - getpagesize();
-    return aligned_alloc(align, size);
+    if (!is_power_of_2(align)) return NULL;
+    size_t rounded = (size + align - 1) & ~(align - 1);
+    void *p = aligned_alloc(align, rounded);
+    return p;
 #else
     int flags;
     int map_sync_flags = 0;
