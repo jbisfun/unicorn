@@ -1002,6 +1002,12 @@ uc_err uc_emu_start(uc_engine *uc, uint64_t begin, uint64_t until,
     }
     uc->nested_level++;
 
+    // Work around stale TB state across outer emulation runs.
+    // This is intentionally skipped for nested uc_emu_start.
+    if (uc->nested_level == 1) {
+        uc->tb_flush(uc);
+    }
+
     uint32_t begin_pc32 = READ_DWORD(begin);
     switch (uc->arch) {
     default:

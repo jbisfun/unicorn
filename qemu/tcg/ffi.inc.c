@@ -50,13 +50,14 @@ static uint64_t do_op_call(tcg_target_ulong *regs, tcg_target_ulong t0) {
     }
 
     if (info->flags & dh_callflag_void && info->sizemask == 0x10 && info->n_args == 4) {
-        ((void (*)(uint32_t, uint32_t, uint64_t, uint32_t))t0)(
-            tci_read_reg(regs, TCG_REG_R0),
-            tci_read_reg(regs, TCG_REG_R1),
-            tci_read_reg_ext(regs, TCG_REG_R2),
-            tci_read_reg(regs, TCG_REG_R4)
+        // helper arg shape: (x32, i64, x32, x32), e.g. hookcode callbacks
+        ((void (*)(uintptr_t, uint64_t, uint32_t, uintptr_t))t0)(
+            (uintptr_t)tci_read_reg(regs, TCG_REG_R0),
+            tci_read_reg_ext(regs, TCG_REG_R1),
+            (uint32_t)tci_read_reg(regs, TCG_REG_R3),
+            (uintptr_t)tci_read_reg(regs, TCG_REG_R4)
         );
-	    return 0;
+        return 0;
 	} else if (info->sizemask == 0x255 && info->n_args == 4) {
 	    return ((uint64_t (*)(uint64_t, uint64_t, uint64_t, uint32_t))t0)(tci_read_reg_ext(regs, TCG_REG_R0), tci_read_reg_ext(regs, TCG_REG_R2), tci_read_reg_ext(regs, TCG_REG_R4), tci_read_reg(regs, TCG_REG_R7));
 	} else if (info->sizemask == 4 && info->n_args == 3) {
@@ -72,9 +73,15 @@ static uint64_t do_op_call(tcg_target_ulong *regs, tcg_target_ulong t0) {
 	    // helper with arg shape (i64) -> i32, e.g., neon_narrow_u16, neon_narrow_high_u8, iwmmxt_setpsr_nz
 	    return ((uint32_t (*)(uint64_t))t0)(tci_read_reg_ext(regs, TCG_REG_R0));
 	} else if (info->sizemask == 0x4 && info->n_args == 2) {
-	    // helper with arg shape (env, i64) -> i32, e.g., neon_narrow_sat_u8 (env is ptr)
+	    // helper with arg shape (i64, x32) -> i32
+	    return ((uint32_t (*)(uint64_t, uintptr_t))t0)(
+	        tci_read_reg_ext(regs, TCG_REG_R0),
+	        (uintptr_t)tci_read_reg(regs, TCG_REG_R2)
+	    );
+	} else if (info->sizemask == 0x10 && info->n_args == 2) {
+	    // helper with arg shape (x32, i64) -> i32, e.g. neon_narrow_sat_*
 	    return ((uint32_t (*)(uintptr_t, uint64_t))t0)(
-	        tci_read_reg(regs, TCG_REG_R0),
+	        (uintptr_t)tci_read_reg(regs, TCG_REG_R0),
 	        tci_read_reg_ext(regs, TCG_REG_R1)
 	    );
 	}
