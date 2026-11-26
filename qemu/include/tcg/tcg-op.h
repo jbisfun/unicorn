@@ -47,7 +47,8 @@ static inline void gen_uc_tracecode(TCGContext *tcg_ctx, int32_t size, int32_t t
     };
 
     const int hook_type = type & UC_HOOK_IDX_MASK;
-    if (puc->hooks_count[hook_type] == 1 && !(type & UC_HOOK_FLAG_NO_STOP)) {
+    /* wasm32 TCI: inline hooks lose their user_data argument; always go through helper_uc_tracecode. */
+    if (TCG_TARGET_REG_BITS == 64 && puc->hooks_count[hook_type] == 1 && !(type & UC_HOOK_FLAG_NO_STOP)) {
         cur = puc->hook[hook_type].head;
         
         while (cur) {
