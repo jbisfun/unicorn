@@ -801,7 +801,7 @@ static bool check_mem_area(uc_engine *uc, uint64_t address, size_t size)
 }
 
 UNICORN_EXPORT
-uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, size_t size)
+uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, uint64_t size)
 {
     size_t count = 0, len;
     uint8_t *bytes = _bytes;
@@ -847,7 +847,7 @@ uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, size_t size)
 
 UNICORN_EXPORT
 uc_err uc_mem_write(uc_engine *uc, uint64_t address, const void *_bytes,
-                    size_t size)
+                    uint64_t size)
 {
     size_t count = 0, len;
     const uint8_t *bytes = _bytes;
@@ -1307,7 +1307,7 @@ static uc_err mem_map_check(uc_engine *uc, uint64_t address, size_t size,
 }
 
 UNICORN_EXPORT
-uc_err uc_mem_map(uc_engine *uc, uint64_t address, size_t size, uint32_t perms)
+uc_err uc_mem_map(uc_engine *uc, uint64_t address, uint64_t size, uint32_t perms)
 {
     uc_err res;
 
@@ -1325,7 +1325,7 @@ uc_err uc_mem_map(uc_engine *uc, uint64_t address, size_t size, uint32_t perms)
 }
 
 UNICORN_EXPORT
-uc_err uc_mem_map_ptr(uc_engine *uc, uint64_t address, size_t size,
+uc_err uc_mem_map_ptr(uc_engine *uc, uint64_t address, uint64_t size,
                       uint32_t perms, void *ptr)
 {
     uc_err res;
@@ -1629,7 +1629,7 @@ error:
 }
 
 UNICORN_EXPORT
-uc_err uc_mem_protect(struct uc_struct *uc, uint64_t address, size_t size,
+uc_err uc_mem_protect(struct uc_struct *uc, uint64_t address, uint64_t size,
                       uint32_t perms)
 {
     MemoryRegion *mr;
@@ -1752,7 +1752,7 @@ static uc_err uc_mem_unmap_snapshot(struct uc_struct *uc, uint64_t address,
 }
 
 UNICORN_EXPORT
-uc_err uc_mem_unmap(struct uc_struct *uc, uint64_t address, size_t size)
+uc_err uc_mem_unmap(struct uc_struct *uc, uint64_t address, uint64_t size)
 {
     MemoryRegion *mr;
     uint64_t addr;
